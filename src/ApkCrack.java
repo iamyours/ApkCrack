@@ -130,6 +130,7 @@ public class ApkCrack {
             File tmp = new File(ANDROID_MANIFEST_PATH + ".tmp");
             StreamResult consoleResult = new StreamResult(tmp);
             transformer.transform(domSource, consoleResult);
+            if(file.exists())file.delete();
             tmp.renameTo(file);
         }
     }
@@ -147,12 +148,12 @@ public class ApkCrack {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
         DOMSource domSource = new DOMSource(document);
-        StreamResult reStreamResult = new StreamResult(file);
-        transformer.transform(domSource, reStreamResult);
         File tmp = new File(netConfigXml + ".tmp");
         StreamResult consoleResult = new StreamResult(tmp);
         transformer.transform(domSource, consoleResult);
-        tmp.renameTo(new File(outFile));
+        File out = new File(outFile);
+        if(out.exists())out.delete();
+        tmp.renameTo(out);
     }
 
     private void addCertFile() {

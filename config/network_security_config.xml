@@ -3,6 +3,6 @@
         <trust-anchors>
             <certificates src="system"/>
             <certificates src="user"/>
-        <certificates src="@raw/charles"/><certificates src="@raw/charles"/><certificates src="@raw/charles"/><certificates src="@raw/charles"/><certificates src="@raw/charles"/><certificates src="@raw/charles"/><certificates src="@raw/charles"/></trust-anchors>
+        </trust-anchors>
     </base-config>
 </network-security-config>
