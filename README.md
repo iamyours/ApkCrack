@@ -9,7 +9,7 @@
 open Charles,then `Help` -> `SSL Proxying` -> `Save Charles Root Certificate...` -> `change Format to Binary certificate(.cer)`-> `Save` 
 
 ## how to use
-
+[download zip](https://github.com/iamyours/ApkCrack/releases),and unzip it.
 ``` sh
 java -jar ApkCrack.jar
 ```
