@@ -1,4 +1,4 @@
-## A tool that make your apk debuggable for Charles/Fiddler in Android 7.0
+## A tool that make your apk debuggable for Charles/Fiddler with Android 6.0
 
 ## requirement
 - jdk
