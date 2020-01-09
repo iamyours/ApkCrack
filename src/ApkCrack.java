@@ -52,7 +52,7 @@ public class ApkCrack {
 
     private void signApk() {
         String cmd = "jarsigner -verbose -keystore " + storeFile + " -storepass " + storePassword + " -keypass " + keyPassword + " " + outFile + " " + keyAlias;
-        System.out.println(">>>>> sign apk ....\n+cmd");
+        System.out.println(">>>>> sign apk ....\n" + cmd);
         try {
             Process p = Runtime.getRuntime().exec(cmd);
             InputStream is = p.getInputStream();
@@ -130,7 +130,7 @@ public class ApkCrack {
             File tmp = new File(ANDROID_MANIFEST_PATH + ".tmp");
             StreamResult consoleResult = new StreamResult(tmp);
             transformer.transform(domSource, consoleResult);
-            if(file.exists())file.delete();
+            if (file.exists()) file.delete();
             tmp.renameTo(file);
         }
     }
@@ -152,7 +152,7 @@ public class ApkCrack {
         StreamResult consoleResult = new StreamResult(tmp);
         transformer.transform(domSource, consoleResult);
         File out = new File(outFile);
-        if(out.exists())out.delete();
+        if (out.exists()) out.delete();
         tmp.renameTo(out);
     }
 

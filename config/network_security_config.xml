@@ -1,8 +1,10 @@
-<?xml version="1.0" encoding="utf-8" standalone="no"?><network-security-config>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<network-security-config>
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system"/>
             <certificates src="user"/>
+            <certificates src="@raw/charles"/>
         </trust-anchors>
     </base-config>
 </network-security-config>
