@@ -209,8 +209,9 @@ public class ApkCrack {
         }
         System.out.println(">>>>decode apk....");
         ApkDecoder decoder = new ApkDecoder();
-        decoder.setApkFile(new File(apkFile));
         try {
+            decoder.setDecodeSources(ApkDecoder.DECODE_SOURCES_NONE);
+            decoder.setApkFile(new File(apkFile));
             decoder.setOutDir(build);
             decoder.decode();
         } catch (Exception e) {
