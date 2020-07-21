@@ -13,6 +13,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 public class ApkCrack {
     private boolean debuggable;
@@ -27,6 +28,8 @@ public class ApkCrack {
     private String apkFile;
     private String outFile;
 
+    private String buildPath;
+
     private static final String BUILD_PATH = "build";
     private static final String RAW_PATH = "build/res/raw/";
     private static final String XML_PATH = "build/res/xml/";
@@ -36,10 +39,47 @@ public class ApkCrack {
     private static final String ATTR_CERT = "certificates";
     private static final String ATTR_TRUST = "trust-anchors";
     private long s;
+    private static final Logger LOG = Logger.getLogger(ApkCrack.class.getName());
+
+    public void setCertFile(String certFile) {
+        this.certFile = certFile;
+    }
+
+    public void setStoreFile(String storeFile) {
+        this.storeFile = storeFile;
+    }
+
+    public void setStorePassword(String storePassword) {
+        this.storePassword = storePassword;
+    }
+
+    public void setKeyAlias(String keyAlias) {
+        this.keyAlias = keyAlias;
+    }
+
+    public void setKeyPassword(String keyPassword) {
+        this.keyPassword = keyPassword;
+    }
+
+    public void setApkFile(String apkFile) {
+        this.apkFile = apkFile;
+    }
+
+    public String getOutFile() {
+        return outFile;
+    }
 
     public void start() {
         s = System.currentTimeMillis();
-        initConfig();
+        if (storeFile != null) {
+            networkSecurityConfig = true;
+
+            setNetWork();
+            setOutFile();
+        } else {
+            initConfig();
+        }
+        setBuildPath();
         decodeApk();
         try {
             hook();
@@ -48,11 +88,24 @@ public class ApkCrack {
         }
         generateApk();
         signApk();
+        LOG.info("done...");
+    }
+
+    private void setBuildPath() {
+        File file = new File(apkFile);
+        buildPath = new File(file.getParent(), "tmpBuild").getAbsolutePath();
+    }
+
+    private void setOutFile() {
+        File file = new File(apkFile);
+        String parent = file.getParent();
+        String fileName = file.getName();
+        outFile = new File(parent, "out-" + fileName).getAbsolutePath();
     }
 
     private void signApk() {
         String cmd = "jarsigner -verbose -keystore " + storeFile + " -storepass " + storePassword + " -keypass " + keyPassword + " " + outFile + " " + keyAlias;
-        System.out.println(">>>>> sign apk ....\n" + cmd);
+        LOG.info("start sign apk...");
         try {
             Process p = Runtime.getRuntime().exec(cmd);
             InputStream is = p.getInputStream();
@@ -61,21 +114,21 @@ public class ApkCrack {
                 String s = br.readLine();
                 if (s == null)
                     break;
-                System.out.println(s);
+                LOG.info(s);
             }
             br.readLine();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(">>>> finished....." + (System.currentTimeMillis() - s) + "ms");
+        LOG.info(">>>> finished....." + (System.currentTimeMillis() - s) + "ms");
     }
 
     //generate apk with apktool
     private void generateApk() {
-        System.out.println(">>>> generate unsigned apk....");
+        LOG.info("start build unsigned apk...");
         ApkOptions opt = new ApkOptions();
         try {
-            new Androlib(opt).build(new File(BUILD_PATH), new File(outFile));
+            new Androlib(opt).build(new File(buildPath), new File(outFile));
         } catch (BrutException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -84,7 +137,8 @@ public class ApkCrack {
 
     //add debuggable ,networkSecurityConfig
     private void hook() throws Exception {
-        System.out.println(">>>>>parsing AndroidManifest.xml.....");
+        LOG.info("start hook apk...");
+        LOG.info(">>>>>parsing AndroidManifest.xml.....");
         File file = new File(ANDROID_MANIFEST_PATH);
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -97,18 +151,18 @@ public class ApkCrack {
             addCertFile();
             if (node != null) {
                 String path = "build/res/xml" + node.getNodeValue().substring(4) + ".xml";
-                System.out.println(">>>>>find networkSecurityConfig:" + path);
+                LOG.info(">>>>>find networkSecurityConfig:" + path);
 
                 addNetConfig("config/network_security_config.xml", path);
 
             } else {//新增文件：network_security_config.xml
-                System.out.println(">>>>>adding networkSecurityConfig attribute...");
+                LOG.info(">>>>>adding networkSecurityConfig attribute...");
                 Attr attr = document.createAttribute(ATTR_NETCONFIG);
                 attr.setValue("@xml/network_security_config");
                 namedNodeMap.setNamedItem(attr);
                 File xmlPath = new File("build/res/xml/");
                 if (!xmlPath.exists()) {
-                    System.out.println(">>>>> mkdirs xml path...");
+                    LOG.info(">>>>> mkdirs xml path...");
                     xmlPath.mkdirs();
                 }
                 addNetConfig("config/network_security_config.xml", "build/res/xml/network_security_config.xml");
@@ -116,7 +170,7 @@ public class ApkCrack {
         }
 
         if (debuggable) {
-            System.out.println(">>>>>adding debuggable attribute...");
+            LOG.info(">>>>>adding debuggable attribute...");
             Attr attr = document.createAttribute(ATTR_DEBUG);
             attr.setValue("true");
             namedNodeMap.setNamedItem(attr);
@@ -136,7 +190,7 @@ public class ApkCrack {
     }
 
     private void addNetConfig(String netConfigXml, String outFile) throws Exception {
-        System.out.println(">>>adding certificate to " + outFile);
+        LOG.info(">>>adding certificate to " + outFile);
         File file = new File(netConfigXml);
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -165,7 +219,7 @@ public class ApkCrack {
     }
 
     private void initConfig() {
-        System.out.println(">>>>>init config...");
+        LOG.info("init config...");
         Properties p = new Properties();
         try {
             p.load(new FileInputStream(new File("config/config.properties")));
@@ -182,32 +236,37 @@ public class ApkCrack {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(configValue());
+        LOG.info(configValue());
+        setNetWork();
+        if (!new File(storeFile).exists()) {
+            LOG.info("error: storeFile not exist");
+        }
+        if (!new File(apkFile).exists()) {
+            LOG.info("error: apkFile not exist");
+        }
+    }
+
+    private void setNetWork() {
         if (networkSecurityConfig) {
             File c = new File(certFile);
             certFileName = c.getName();
             certName = certFileName.substring(0, certFileName.lastIndexOf("."));
             if (!c.exists()) {
-                System.out.println(certName);
-                throw new RuntimeException("certFile not exist");
+                LOG.info(certName);
+                LOG.info("error: certFile not exist");
             }
 
-        }
-        if (!new File(storeFile).exists()) {
-            throw new RuntimeException("storeFile not exist");
-        }
-        if (!new File(apkFile).exists()) {
-            throw new RuntimeException("apkFile not exist");
         }
     }
 
     private void decodeApk() {
-        File build = new File("build");
+        File build = new File(buildPath);
         if (build.exists()) {
-            System.out.println(">>>>remove build.....");
+            LOG.info("remove build.....");
             deleteDir(build);
         }
-        System.out.println(">>>>decode apk....");
+        LOG.info("start decode apk...");
+        LOG.info(">>>>decode apk....");
         ApkDecoder decoder = new ApkDecoder();
         try {
             decoder.setDecodeSources(ApkDecoder.DECODE_SOURCES_NONE);

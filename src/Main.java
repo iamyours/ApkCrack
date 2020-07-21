@@ -1,6 +1,9 @@
+import java.io.File;
+
 public class Main {
 
     public static void main(String[] args) {
-        new ApkCrack().start();
+        String parent = new File("/yanxx/test/test.file").getName();
+        System.out.println(parent);
     }
 }
