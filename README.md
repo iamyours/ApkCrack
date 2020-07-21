@@ -5,16 +5,35 @@
 - make sure `jarsigner` works
 - Fiddler/Charles
 
+## How to use
+we can use it in GUI,command line,library  
+download latest [release](https://github.com/iamyours/ApkCrack/releases) version.
 
-## config file in `config/config.properties`
+### GUI
+```sh
+java -jar ApkCrackUI.jar
+```
+
+### command line use
+config file in `config/config.properties`
 - add apk path,out apk path
 - add your sign file(or you can use test.jks)
 - add your certFile that export from Charles/Fiddler。
 
-## how to use
-[download zip](https://github.com/iamyours/ApkCrack/releases),and unzip it.
 ``` sh
 java -jar ApkCrack.jar
+```
+
+### library
+add ApkCrack.jar in your project.
+``` java
+apkCrack.setApkFile(apkFile);
+apkCrack.setCertFile(certFile);
+apkCrack.setStoreFile(storeFile);
+apkCrack.setStorePassword(storePassword);
+apkCrack.setKeyAlias(keyAlias);
+apkCrack.setKeyPassword(keyPassword);
+apkCrack.start();
 ```
 
 ## export cert file from Charles
