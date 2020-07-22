@@ -1,6 +1,7 @@
 public class Main {
 
     public static void main(String[] args) {
-       new ApkCrack().start();
+        ProgressUtil.init();
+        new ApkCrack().start();
     }
 }

@@ -197,6 +197,8 @@ public class ApkCrack {
         StreamResult consoleResult = new StreamResult(tmp);
         transformer.transform(domSource, consoleResult);
         File out = new File(outFile);
+        File parent = out.getParentFile();
+        if (!parent.exists()) parent.mkdirs();
         if (out.exists()) out.delete();
         tmp.renameTo(out);
     }

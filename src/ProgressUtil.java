@@ -1,6 +1,8 @@
 import brut.androlib.Androlib;
 import brut.androlib.res.AndrolibResources;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -51,29 +53,45 @@ public class ProgressUtil {
         void progress(String msg1, String msg2, float progress);
     }
 
-    public static void setMsgHandler(ProgressHandler progressHandler) {
+    private static ProgressHandler progressHandler;
+
+    private static ProgressHandler getHandler() {
+        return progressHandler;
+    }
+
+    private static Executor executor = Executors.newSingleThreadExecutor();
+
+
+    public static void init() {
         for (Class cls : LoggerClasses) {
             Logger logger = Logger.getLogger(cls.getName());
             logger.addHandler(new Handler() {
                 @Override
                 public void publish(LogRecord record) {
-                    String msg = record.getMessage();
-                    String msg2 = null;
-                    float progress = 0f;
+                    System.out.println(record.getMessage());
+                    executor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (getHandler() == null) return;
+                            String msg = record.getMessage();
+                            String msg2 = null;
+                            float progress = 0f;
 
-                    for (int i = 0; i < detailMsgs.length; i++) {
-                        if (msg.startsWith(detailMsgs[i])) {
-                            progress = (i + 1f) / detailMsgs.length;
-                            break;
+                            for (int i = 0; i < detailMsgs.length; i++) {
+                                if (msg.startsWith(detailMsgs[i])) {
+                                    progress = (i + 1f) / detailMsgs.length;
+                                    break;
+                                }
+                            }
+                            for (String m : msgs) {
+                                if (msg.startsWith(m)) {
+                                    msg2 = msg;
+                                    break;
+                                }
+                            }
+                            getHandler().progress(msg, msg2, progress);
                         }
-                    }
-                    for (String m : msgs) {
-                        if (msg.startsWith(m)) {
-                            msg2 = msg;
-                            break;
-                        }
-                    }
-                    progressHandler.progress(msg, msg2, progress);
+                    });
                 }
 
                 @Override
@@ -87,5 +105,19 @@ public class ProgressUtil {
                 }
             });
         }
+    }
+
+    public static void setMsgHandler(ProgressHandler h) {
+        progressHandler = h;
+    }
+
+    public static void main(String[] args) {
+        setMsgHandler(new ProgressHandler() {
+            @Override
+            public void progress(String msg1, String msg2, float progress) {
+                System.out.println(msg1 + "," + msg2 + "," + progress);
+            }
+        });
+        Logger.getLogger(Androlib.class.getName()).info("test");
     }
 }

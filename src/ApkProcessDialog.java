@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -11,6 +12,7 @@ public class ApkProcessDialog extends JDialog {
     private JTextArea detailLabel;
     private JProgressBar progressBar;
     private JScrollPane scrollPane;
+    private Document document;
 
     public void setApkFile(String apkFile) {
         this.apkFile = apkFile;
@@ -34,6 +36,8 @@ public class ApkProcessDialog extends JDialog {
         detailLabel = new JTextArea("");
         detailLabel.setLineWrap(true);
         detailLabel.setWrapStyleWord(true);
+        document = new DefaultStyledDocument();
+        detailLabel.setDocument(document);
         scrollPane.setViewportView(detailLabel);
         panel.add(top, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -67,21 +71,34 @@ public class ApkProcessDialog extends JDialog {
         apkCrack.setDebuggable(true);
         setVisible(true);
         processThread = new Thread(() -> {
+            ProgressUtil.init();
             apkCrack.start();
         });
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         processThread.start();
     }
+
+    private StringBuilder sb = new StringBuilder();
 
     private void setProgressHandler() {
         ProgressUtil.setMsgHandler(new ProgressUtil.ProgressHandler() {
             @Override
             public void progress(String msg1, String msg2, float progress) {
+
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
                         if (msg1 != null) {
-                            String oldText = detailLabel.getText();
-                            detailLabel.setText(oldText + "\n" + msg1);
+                            SimpleAttributeSet attrs = new SimpleAttributeSet();
+                            try {
+                                document.insertString(document.getLength(), msg1 + "\n", attrs);
+                            } catch (BadLocationException e) {
+                                e.printStackTrace();
+                            }
                         }
                         if (msg2 != null) {
                             mainLabel.setText(msg2);
