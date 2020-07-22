@@ -3,3 +3,4 @@ build
 config/*.apk
 out/
 *.iml
+config/tmpBuild/

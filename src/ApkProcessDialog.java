@@ -64,6 +64,7 @@ public class ApkProcessDialog extends JDialog {
         apkCrack.setStorePassword(config.storePassword);
         apkCrack.setKeyAlias(config.keyAlias);
         apkCrack.setKeyPassword(config.keyPassword);
+        apkCrack.setDebuggable(true);
         setVisible(true);
         processThread = new Thread(() -> {
             apkCrack.start();
@@ -88,12 +89,14 @@ public class ApkProcessDialog extends JDialog {
                         if (progress > 0) {
                             progressBar.setValue((int) (progress * 100));
                         }
+                        if ("done...".equals(msg1)) {
+                            showDoneDialog();
+                        }
 
                     }
+
                 });
-                if ("done...".equals(msg1)) {
-                    showDoneDialog();
-                }
+
             }
         });
     }

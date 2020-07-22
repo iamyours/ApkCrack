@@ -30,10 +30,7 @@ public class ApkCrack {
 
     private String buildPath;
 
-    private static final String BUILD_PATH = "build";
-    private static final String RAW_PATH = "build/res/raw/";
-    private static final String XML_PATH = "build/res/xml/";
-    private static final String ANDROID_MANIFEST_PATH = "build/AndroidManifest.xml";
+    private static final String ANDROID_MANIFEST_PATH = "AndroidManifest.xml";
     private static final String ATTR_NETCONFIG = "android:networkSecurityConfig";
     private static final String ATTR_DEBUG = "android:debuggable";
     private static final String ATTR_CERT = "certificates";
@@ -67,6 +64,10 @@ public class ApkCrack {
 
     public String getOutFile() {
         return outFile;
+    }
+
+    public void setDebuggable(boolean debuggable) {
+        this.debuggable = debuggable;
     }
 
     public void start() {
@@ -139,34 +140,25 @@ public class ApkCrack {
     private void hook() throws Exception {
         LOG.info("start hook apk...");
         LOG.info(">>>>>parsing AndroidManifest.xml.....");
-        File file = new File(ANDROID_MANIFEST_PATH);
+        File file = new File(buildPath, ANDROID_MANIFEST_PATH);
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
         Document document = documentBuilder.parse(file);
         Node application = document.getElementsByTagName("application").item(0);
 
         NamedNodeMap namedNodeMap = application.getAttributes();
-        Node node = namedNodeMap.getNamedItem(ATTR_NETCONFIG);
         if (networkSecurityConfig) {
             addCertFile();
-            if (node != null) {
-                String path = "build/res/xml" + node.getNodeValue().substring(4) + ".xml";
-                LOG.info(">>>>>find networkSecurityConfig:" + path);
-
-                addNetConfig("config/network_security_config.xml", path);
-
-            } else {//新增文件：network_security_config.xml
-                LOG.info(">>>>>adding networkSecurityConfig attribute...");
-                Attr attr = document.createAttribute(ATTR_NETCONFIG);
-                attr.setValue("@xml/network_security_config");
-                namedNodeMap.setNamedItem(attr);
-                File xmlPath = new File("build/res/xml/");
-                if (!xmlPath.exists()) {
-                    LOG.info(">>>>> mkdirs xml path...");
-                    xmlPath.mkdirs();
-                }
-                addNetConfig("config/network_security_config.xml", "build/res/xml/network_security_config.xml");
+            LOG.info(">>>>>adding networkSecurityConfig attribute...");
+            Attr attr = document.createAttribute(ATTR_NETCONFIG);
+            attr.setValue("@xml/network_security_config");
+            namedNodeMap.setNamedItem(attr);
+            File xmlPath = new File("build/res/xml/");
+            if (!xmlPath.exists()) {
+                LOG.info(">>>>> mkdirs xml path...");
+                xmlPath.mkdirs();
             }
+            addNetConfig(buildPath + "/res/xml/network_security_config.xml");
         }
 
         if (debuggable) {
@@ -181,7 +173,7 @@ public class ApkCrack {
             DOMSource domSource = new DOMSource(document);
             StreamResult reStreamResult = new StreamResult(file);
             transformer.transform(domSource, reStreamResult);
-            File tmp = new File(ANDROID_MANIFEST_PATH + ".tmp");
+            File tmp = new File(buildPath, ANDROID_MANIFEST_PATH + ".tmp");
             StreamResult consoleResult = new StreamResult(tmp);
             transformer.transform(domSource, consoleResult);
             if (file.exists()) file.delete();
@@ -189,12 +181,11 @@ public class ApkCrack {
         }
     }
 
-    private void addNetConfig(String netConfigXml, String outFile) throws Exception {
+    private void addNetConfig(String outFile) throws Exception {
         LOG.info(">>>adding certificate to " + outFile);
-        File file = new File(netConfigXml);
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse(file);
+        Document document = documentBuilder.parse(StringUtil.netConfigStream());
         Node node = document.getElementsByTagName(ATTR_TRUST).item(0);
         Element element = document.createElement(ATTR_CERT);
         element.setAttribute("src", "@raw/" + certName);
@@ -202,7 +193,7 @@ public class ApkCrack {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
         DOMSource domSource = new DOMSource(document);
-        File tmp = new File(netConfigXml + ".tmp");
+        File tmp = new File(buildPath + "netConfig.tmp");
         StreamResult consoleResult = new StreamResult(tmp);
         transformer.transform(domSource, consoleResult);
         File out = new File(outFile);
@@ -212,7 +203,7 @@ public class ApkCrack {
 
     private void addCertFile() {
         try {
-            FileUtils.copyFile(new File(certFile), new File(RAW_PATH, certFileName));
+            FileUtils.copyFile(new File(certFile), new File(buildPath + "/res/raw/", certFileName));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
