@@ -70,7 +70,7 @@ public class ApkCrack {
         this.debuggable = debuggable;
     }
 
-    public void start() {
+    public void start() throws Exception {
         s = System.currentTimeMillis();
         if (storeFile != null) {
             networkSecurityConfig = true;
@@ -82,11 +82,8 @@ public class ApkCrack {
         }
         setBuildPath();
         decodeApk();
-        try {
-            hook();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        hook();
+
         generateApk();
         signApk();
         LOG.info("done...");
@@ -125,15 +122,11 @@ public class ApkCrack {
     }
 
     //generate apk with apktool
-    private void generateApk() {
+    private void generateApk() throws Exception {
         LOG.info("start build unsigned apk...");
         ApkOptions opt = new ApkOptions();
-        try {
-            new Androlib(opt).build(new File(buildPath), new File(outFile));
-        } catch (BrutException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+        new Androlib(opt).build(new File(buildPath), new File(outFile));
+
     }
 
     //add debuggable ,networkSecurityConfig

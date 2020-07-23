@@ -42,7 +42,6 @@ public class ApkProcessDialog extends JDialog {
         panel.add(top, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
         setContentPane(panel);
-        setProgressHandler();
         setLocationRelativeTo(getOwner());
         addWindowListener(new WindowAdapter() {
             @Override
@@ -72,7 +71,13 @@ public class ApkProcessDialog extends JDialog {
         setVisible(true);
         processThread = new Thread(() -> {
             ProgressUtil.init();
-            apkCrack.start();
+            setProgressHandler();
+            try {
+                apkCrack.start();
+            } catch (Exception e) {
+                e.printStackTrace();
+                showErrorDialog(e);
+            }
         });
         try {
             Thread.sleep(100);
@@ -80,6 +85,16 @@ public class ApkProcessDialog extends JDialog {
             e.printStackTrace();
         }
         processThread.start();
+    }
+
+    private void showErrorDialog(Exception e) {
+        SimpleAttributeSet attrs = new SimpleAttributeSet();
+        try {
+            document.insertString(document.getLength(), e.getMessage() + "\n", attrs);
+        } catch (BadLocationException e1) {
+            e1.printStackTrace();
+        }
+        mainLabel.setText("Process failed!");
     }
 
     private StringBuilder sb = new StringBuilder();

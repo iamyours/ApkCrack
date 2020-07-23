@@ -1,6 +1,8 @@
 import brut.androlib.Androlib;
 import brut.androlib.res.AndrolibResources;
 
+import java.lang.reflect.Field;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.logging.Handler;
@@ -65,6 +67,7 @@ public class ProgressUtil {
     public static void init() {
         for (Class cls : LoggerClasses) {
             Logger logger = Logger.getLogger(cls.getName());
+            clearHandler(logger);
             logger.addHandler(new Handler() {
                 @Override
                 public void publish(LogRecord record) {
@@ -104,6 +107,20 @@ public class ProgressUtil {
 
                 }
             });
+        }
+    }
+
+    private static void clearHandler(Logger logger) {
+        try {
+            Field field = logger.getClass().getDeclaredField("handlers");
+            field.setAccessible(true);
+            CopyOnWriteArrayList list = (CopyOnWriteArrayList) field.get(logger);
+            list.clear();
+            System.out.println("handler size:" + list.size());
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
     }
 

@@ -18,6 +18,7 @@ public class ConfigDialog extends JDialog {
         setSize(400, 300);
         JPanel panel01 = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel01.add(new JLabel("StoreFile"));
+        setTitle("Config");
         storeFileText = new JTextField(20);
         panel01.add(storeFileText);
         JButton storeBtn = new JButton("Open");
